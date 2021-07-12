@@ -1,17 +1,20 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import projectsRouter from './controllers/projects.js';
+
+import decodeIDToken from './authenticateToken.js';
 import usersRouter from './controllers/users.js';
-import decodeIDToken from "./authenticateToken.js";
+import projectsRouter from './controllers/projects.js';
 
 const app = express();
 
-app.use(cors);
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(decodeIDToken);
-app.use("/api", [projectsRouter, usersRouter]);
+
+app.use('/api/users', usersRouter);
+app.use('/api/projects', projectsRouter);
 
 const PORT = 3001;
 app.listen(PORT, () => {
@@ -22,12 +25,8 @@ const mongoDB = 'mongodb+srv://jyrw:^AtT&uT4aXYL3T@synchro.ap1ng.mongodb.net/myF
 
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
-    console.log('Connected to database');
+        console.log('Connected to database');
     })
     .catch((err) => {
-    console.log('Error connecting to DB', err.message);
+        console.log('Error connecting to DB', err.message);
     });
-
-const db = mongoose.connection;
-
-db.on('error', console.error.bind(console, 'MongoDB connection error'));

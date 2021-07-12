@@ -1,12 +1,12 @@
 import express from "express";
 import User from "../schemas/userSchema.js"
 
-const userRouter = express.Router();
+const usersRouter = express.Router();
 
 /**
  * Create a new user.
  */
-userRouter.post('/users', (req, res) => {
+usersRouter.post('/', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const user = new User(req.body);
@@ -20,12 +20,12 @@ userRouter.post('/users', (req, res) => {
 /**
  * Get the current user.
  */
-userRouter.get('/users', (req, res) => {
+usersRouter.get('/', (req, res) => {
     const auth = req.currentUser;
-    const uid = auth.uid;
     if (auth) {
+        const uid = auth.uid;
         User.find({uid: uid}, (err, user) => {
-            return res.json(user.toJSON());
+            return res.status(200).json(user);
         })
     } else {
         return res.status(403).send('Not authorized');
@@ -33,14 +33,17 @@ userRouter.get('/users', (req, res) => {
 });
 
 // Add the given projectId to the user's project array.
-userRouter.put('/users', (req, res) => {
+usersRouter.put('/', (req, res) => {
     const auth = req.currentUser;
     const uid = auth.uid;
     if (auth) {
         User.find({uid: uid}, (err, user) => {
-            
+            user.projects.push(req.body.id) // req.id?
+            return res.status(200).send('Project added to user');
         })
+    } else {
+        return res.status(403).send('Not authorized');
     }
 })
 
-export default userRouter;
+export default usersRouter;

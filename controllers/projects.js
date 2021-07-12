@@ -3,19 +3,8 @@ import Project from "../schemas/projectSchema.js";
 
 const projectsRouter = express.Router();
 
-projectsRouter.get('/projects', async (req, res) => {
-    const auth = req.currentUser;
-    const uid = auth.uid;
-    if (auth) { // no...check user with the uid's arr of projects
-        Project.find({uid: uid}, (err, projects) => {
-            return res.json(projects.map(project => project.toJSON()));
-        });
-    } else {
-        return res.status(403).send('Not authorized');
-    }
-});
-
-projectsRouter.post('/projects', (req, res) => {
+// Create a new project
+projectsRouter.post('/', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const project = new Project(req.body);
@@ -25,5 +14,35 @@ projectsRouter.post('/projects', (req, res) => {
         return res.status(403).send('Not authorized');
     }
 });
+
+// Given a project id, return the project document
+projectsRouter.get('/', async (req, res) => {
+    const auth = req.currentUser;
+    const id = req.body.id;
+    if (auth) {
+        Project.find({_id: id}, (err, project) => {
+            if (err) {
+                console.log(err);
+            }
+            return res.status(200).json(project.toJSON());
+        });
+    } else {
+        return res.status(403).send('Not authorized');
+    }
+});
+
+// Add a user to a project
+projectsRouter.put('/', (req, res) => {
+    const auth = req.currentUser;
+    if (auth) {
+        Project.find({_id: id}, (err, project) => {
+            if (err) {
+                console.log(err);
+            }
+            project.users.push(req.body.id) // req.id?
+            return res.status(200).send('User added to project');
+        })
+    }
+})
 
 export default projectsRouter;

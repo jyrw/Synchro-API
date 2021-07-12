@@ -2,15 +2,10 @@ import admin from "firebase-admin"; // import * as admin from "firebase-admin"; 
 import serviceAccount from "./serviceAccount.js";
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    /*
-    Not needed?
-    "Note: Initialization options such as databaseURL shown in the code examples on this page are not strictly required to initialize the SDK. 
-    Depending on your deployment environment and the target use case, you can choose to specify only the options you need."
-    */
-    // databaseURL: "https://Synchro-Auth-Development.firebaseio.com" // Wrong URL. 
+    credential: admin.credential.cert(serviceAccount)
 });
 
+// Application level middleware to authenticate HTTP requests
 async function decodeIDToken(req, res, next) {
     const header = req.headers?.authorization; // Optional chaining
     if (header !== 'Bearer null' && req.headers?.authorization?.startsWith('Bearer ')) {
