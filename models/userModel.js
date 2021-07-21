@@ -8,13 +8,7 @@ const userSchema = new Schema({
     email: { type: String, required: true },
     events: [{ type: Schema.ObjectId, ref: 'event'}],
     projects: [{ type: Schema.ObjectId, ref: 'user'}]
-    /*
-    displayPicture: {
-        type: String,
-        get: v => `${root}${v}`
-    }
-    */
-})
+});
 
 const User = mongoose.model('User', userSchema);
 

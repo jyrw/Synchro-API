@@ -1,26 +1,26 @@
 import express from "express";
-import Project from "../schemas/projectSchema.js";
+import Project from "../models/projectModel.js";
 
 const projectsRouter = express.Router();
 
-// Create a new project
+// Create a new project, return the project id in json (correct way?) // TODO check for duplicate project name
 projectsRouter.post('/', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const project = new Project(req.body);
-        const savedProject = project.save();
-        return res.status(201).json(savedProject);
+        project.save();
+        return res.status(201).json({savedProjectId: project._id});
     } else {
         return res.status(403).send('Not authorized');
     }
 });
 
 // Given a project id, return the project document
-projectsRouter.get('/', async (req, res) => {
+projectsRouter.get('/:projectId', async (req, res) => {
     const auth = req.currentUser;
-    const id = req.body.id;
     if (auth) {
-        Project.find({_id: id}, (err, project) => {
+        const id = req.params.projectId;
+        Project.findOne({_id: id}, (err, project) => {
             if (err) {
                 console.log(err);
             }
@@ -32,14 +32,15 @@ projectsRouter.get('/', async (req, res) => {
 });
 
 // Add a user to a project
-projectsRouter.put('/', (req, res) => {
+projectsRouter.put('/:projectId/users', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
+        const id = req.params.projectId;
         Project.find({_id: id}, (err, project) => {
             if (err) {
                 console.log(err);
             }
-            project.users.push(req.body.id) // req.id?
+            project.users.push(req.body.id) // fix this
             return res.status(200).send('User added to project');
         })
     }

@@ -4,9 +4,10 @@ const Schema = mongoose.Schema;
 
 const projectSchema = new Schema({
     name: String,
+    endDate: Date,
     users: [String],
-    events: [Schema.ObjectId]
-})
+    events: [{ type: Schema.ObjectId, ref: 'event'}]
+});
 
 const Project = new mongoose.model('Project', projectSchema);
 
