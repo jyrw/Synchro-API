@@ -1,5 +1,7 @@
 import express from "express";
 import Project from "../models/projectModel.js";
+import User from "../models/userModel.js";
+import Event from "../models/eventModel.js";
 
 const projectsRouter = express.Router();
 
@@ -7,9 +9,14 @@ const projectsRouter = express.Router();
 projectsRouter.post('/', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
+        const uid = auth.uid; // Or pass in body?
         const project = new Project(req.body);
-        project.save();
-        return res.status(201).json({savedProjectId: project._id});
+        User.findOne({uid: uid}, (err, user) => {
+            project.users.push(user);
+            console.log(user);
+            project.save();
+            return res.status(201).json({savedProjectId: project._id});
+        })
     } else {
         return res.status(403).send('Not authorized');
     }
@@ -19,12 +26,12 @@ projectsRouter.post('/', (req, res) => {
 projectsRouter.get('/:projectId', async (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const id = req.params.projectId;
-        Project.findOne({_id: id}, (err, project) => {
+        const projectId = req.params.projectId;
+        Project.findOne({_id: projectId}, (err, project) => {
             if (err) {
                 console.log(err);
             }
-            return res.status(200).json(project.toJSON());
+            return res.status(200).json(project.toJSON()); // TODO: populate/calculate and/or separate into diff endpoints
         });
     } else {
         return res.status(403).send('Not authorized');
@@ -35,13 +42,14 @@ projectsRouter.get('/:projectId', async (req, res) => {
 projectsRouter.put('/:projectId/users', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const id = req.params.projectId;
-        Project.find({_id: id}, (err, project) => {
-            if (err) {
-                console.log(err);
-            }
-            project.users.push(req.body.id) // fix this
-            return res.status(200).send('User added to project');
+        const projectId = req.params.projectId;
+        const email = req.body.email;
+        Project.findOne({_id: projectId}, (err, project) => {
+            User.findOne({email: email}, (err, user) => {
+                project.users.push(user);
+                project.save();
+                return res.status(200).send('User added to project');
+            })
         })
     }
 })
