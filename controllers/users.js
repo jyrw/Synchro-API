@@ -15,7 +15,7 @@ usersRouter.post('/', (req, res) => {
     if (auth) {
         const user = new User(req.body);
         const savedUser = user.save();
-        return res.status(201).json(savedUser);
+        return res.status(201).send('Created new user');
     } else {
         return res.status(403).send('Not authorized');
     }
@@ -45,7 +45,7 @@ usersRouter.get('/:userId/projects', (req, res) => {
     if (auth) {
         const uid = req.params.userId;
         User.findOne({uid: uid}, 'projects')
-            .populate('projects', '_id name')
+            .populate('projects', '_id name endDate')
             .exec((err, user) => {
                 return res.status(200).json(user);
             })
@@ -85,36 +85,35 @@ usersRouter.put('/:userId', (req, res) => {
     }
 })
 
-// Add the given projectId to the user's project array.
+// Creates a project with request body and adds it to the user's project array.
 usersRouter.put('/:userId/projects', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const uid = req.params.userId;
-        const projectId = req.body.projectId;
+        const project = new Project(req.body);
         User.findOne({uid: uid}, (err, user) => {
-            Project.findOne({_id: projectId}, (err, project) => {
-                user.projects.push(project);
-                user.save();
-                return res.status(200).send('Project added to user');
-            })
+            project.users.push(user);
+            project.save();
+            user.projects.push(project);
+            user.save();
+            return res.status(201).send('Project created');
         })
     } else {
         return res.status(403).send('Not authorized');
     }
 })
 
-// Add the given event to the user's event array.
+// Creates an event with request body and adds it to the user's event array.
 usersRouter.put('/:userId/events', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const uid = req.params.userId;
-        const eventId = req.body.eventId;
+        const event = new Event(req.body);
         User.findOne({uid: uid}, (err, user) => {
-            Event.findOne({_id: eventId}, (err, event) => {
-                user.events.push(event);
-                user.save();
-                return res.status(200).send('Event added to user');
-            })
+            event.save();
+            user.events.push(event);
+            user.save();
+            return res.status(201).send('Event created');
         })
     } else {
         return res.status(403).send('Not authorized');
