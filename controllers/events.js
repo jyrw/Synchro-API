@@ -20,7 +20,7 @@ eventsRouter.post('/', (req, res) => {
 /** 
  * Given an event objectId, return the event.
  */
-eventsRouter.get('/', (req, res) => {
+eventsRouter.get('/:objectId', (req, res) => {
     const auth = req.currentUser;
     const id = req.body.id;
     if (auth) {
