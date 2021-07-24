@@ -14,82 +14,81 @@ usersRouter.post('/', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const user = new User(req.body);
-        const savedUser = user.save();
+        user.save();
         return res.status(201).send('Created new user');
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
     }
 });
 
 /**
- * Get user information (displayName, email) of user with uid userId
+ * Get user information (displayName, email) of user with the given uid
  */
-usersRouter.get('/:userId', (req, res) => {
+usersRouter.get('/:uid', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const uid = req.params.userId;
+        const uid = req.params.uid;
         User.findOne({uid: uid}, 'displayName email')
             .exec((err, user) => {
                 return res.status(200).json(user);
             })
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
     }
 });
 
 /**
- * Get project info of user with uid userId
+ * Get project info of user with the given uid
  */
-usersRouter.get('/:userId/projects', (req, res) => {
+usersRouter.get('/:uid/projects', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const uid = req.params.userId;
+        const uid = req.params.uid;
         User.findOne({uid: uid}, 'projects')
             .populate('projects', '_id name endDate')
             .exec((err, user) => {
                 return res.status(200).json(user);
             })
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
     }
 });
 
 /** 
- * Get events of user with uid userId
+ * Get events of user with the given uid
  */
-usersRouter.get('/:userId/events', (req, res) => {
+usersRouter.get('/:uid/events', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const uid = req.params.userId;
+        const uid = req.params.uid;
         User.findOne({uid: uid}, 'events')
             .populate('events') // Check if this is working properly
             .exec((err, user) => {
                 return res.status(200).json(user);
             })
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
     }
 });
 
 // Change current user info
-usersRouter.put('/:userId', (req, res) => {
+usersRouter.put('/:uid', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const uid = req.params.userId;
-        User.findOneAndUpdate({uid: uid}, req.body)
-            .exec((err, updatedUser) => {
+        const uid = req.params.uid;
+        User.findOneAndUpdate({uid: uid}, req.body, (err, updatedUser) => {
                 return res.status(200).send('User info changed');
             }) 
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
     }
 })
 
 // Creates a project with request body and adds it to the user's project array.
-usersRouter.put('/:userId/projects', (req, res) => {
+usersRouter.post('/:uid/projects', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const uid = req.params.userId;
+        const uid = req.params.uid;
         const project = new Project(req.body);
         User.findOne({uid: uid}, (err, user) => {
             project.users.push(user);
@@ -99,15 +98,15 @@ usersRouter.put('/:userId/projects', (req, res) => {
             return res.status(201).send('Project created');
         })
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
     }
 })
 
 // Creates an event with request body and adds it to the user's event array.
-usersRouter.put('/:userId/events', (req, res) => {
+usersRouter.post('/:uid/events', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
-        const uid = req.params.userId;
+        const uid = req.params.uid;
         const event = new Event(req.body);
         User.findOne({uid: uid}, (err, user) => {
             event.save();
@@ -116,7 +115,63 @@ usersRouter.put('/:userId/events', (req, res) => {
             return res.status(201).send('Event created');
         })
     } else {
-        return res.status(403).send('Not authorized');
+        return res.status(401).send('Not authorized');
+    }
+})
+
+// Change event info
+usersRouter.put('/:uid/events/:eventId', (req, res) => { // TODO: uid param not used?
+    const auth = req.currentUser;
+    if (auth) {
+        const eventId = req.params.eventId;
+        Event.findOneAndUpdate({_id: eventId}, req.body, (err, updatedEvent) => {
+            return res.status(200).send('Event modified');
+        })
+        /* Validation for clashes: now handled by frontend
+        const newStartDate = req.body.startDate;
+        const newEndDate = req.body.endDate;
+        User.findOne({uid: uid})
+            .populate({
+                path: 'events',
+                match: { $or: 
+                    [{ $and: [
+                         { startDate: { $gt: newStartDate } },
+                         { startDate: { $lt: newEndDate } }
+                    ]},
+                    { $and: [
+                        { endDate: { $gt: newStartDate } },
+                        { endDate: { $lt: newEndDate } }
+                    ]}]
+                }
+            }).exec((err, user) => {
+                if (user.events.length > 0) {
+                    return res.status(401).send('New event clashes with existing schedule');
+                } else {
+                    Event.findOneAndUpdate({_id: eventId}, req.body)
+                        .exec((err, updatedEvent) => {
+                            return res.status(200).send('Event info changed')
+                    })
+                }
+            })
+            */  
+    } else {
+        return res.status(401).send('Not authorized');
+    }
+})
+
+// Delete event
+usersRouter.delete('/:uid/events/:eventId', (req, res) => {
+    const auth = req.currentUser;
+    if (auth) {
+        const uid = req.params.uid;
+        const eventId = req.params.eventId;
+        User.findOneAndUpdate({uid: uid}, {$pull: {events: eventId}}, (err, user) => {
+            Event.findOneAndDelete({_id: eventId}, (err, event) => {
+                return res.status(200).send('Event deleted');
+            })
+        })
+    } else {
+        return res.status(401).send('Not authorized');
     }
 })
 

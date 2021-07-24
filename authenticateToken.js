@@ -20,7 +20,7 @@ async function decodeIDToken(req, res, next) {
     }
     next(); // https://https://stackoverflow.com/questions/5384526/javascript-node-js-next
     
-    // req.currentUser = {uid: "sampleUid"};
+    // req.currentUser = {uid: "debug"};
     // next();
 }
 

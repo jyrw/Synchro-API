@@ -5,7 +5,6 @@ import cors from "cors";
 import decodeIDToken from './authenticateToken.js';
 import usersRouter from './controllers/users.js';
 import projectsRouter from './controllers/projects.js';
-import eventsRouter from "./controllers/events.js";
 
 const app = express();
 
@@ -16,7 +15,6 @@ app.use(decodeIDToken);
 
 app.use('/api/users', usersRouter);
 app.use('/api/projects', projectsRouter);
-app.use('/api/events', eventsRouter);
 
 const PORT = 3001;
 app.listen(PORT, () => {
