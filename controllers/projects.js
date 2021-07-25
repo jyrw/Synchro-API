@@ -11,7 +11,7 @@ projectsRouter.get('/:projectId/users', async (req, res) => {
     if (auth) {
         const projectId = req.params.projectId;
         Project.findOne({_id: projectId})
-            .populate('users', 'displayName email _id')
+            .populate('users', 'displayName email _id uid')
             .exec((err, project) => {
                  return res.status(200).json(project.users);
             });
@@ -25,6 +25,7 @@ projectsRouter.get('/:projectId/events', async (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const projectId = req.params.projectId;
+        const currDate = new Date();
         Project.findOne({_id: projectId}, (err, project) => { // Find a better way to access project end date
             Project.findOne({_id: projectId}, 'users events')
                 .populate({
@@ -35,7 +36,7 @@ projectsRouter.get('/:projectId/events', async (req, res) => {
                         path: 'events',
                         model: 'Event',
                         select: 'start end -_id',
-                        match: {$and: [{end: {$lte: project.endDate}}, {project: {$ne: projectId}}]},
+                        match: {$and: [{end: {$lt: project.endDate}}, {end: {$gt: currDate}}, {project: {$ne: projectId}}]},
                         options: {sort: {start: 1}}
                     }
                 })
@@ -108,10 +109,8 @@ projectsRouter.delete('/:projectId/users/:userId', (req, res) => {
     if (auth) {
         const projectId = req.params.projectId;
         const userId = req.params.userId; // _id field of user, NOT uid
-        console.log(projectId);
-        console.log(userId);
         Project.findOneAndUpdate({_id: projectId}, {$pull: {users: userId}}, (err, project) => {
-            User.findOneAndUpdate({_id: userId}, {$pull: { events: {$in: project.events}, projects: projectId } }, 
+            User.findOneAndUpdate({_id: userId}, {$pull: { events: {$in: project.events}, projects: projectId } },
                 (err, user) => {
                     return res.status(200).send('User removed from project');
                 })
@@ -200,9 +199,8 @@ projectsRouter.delete('/:projectId', (req, res) => {
         const uid = auth.uid;
         const projectId = req.params.projectId;
         Project.findOneAndDelete({_id: projectId}, (err, project) => {
-            console.log(project);
             Event.deleteMany({_id: {$in: project.events}}, (err, event) => {});
-            project.users.forEach(userId => User.findOneAndUpdate({_id: userId}, {$pull: { events: {$in: project.events}}, projects: projectId}, (err, user) => {}));
+            project.users.forEach(userId => User.findOneAndUpdate({_id: userId}, {$pull: { events: {$in: project.events}, projects: projectId}}, (err, user) => {}));
             return res.status(200).send('Project deleted');
         })
     } else {
@@ -253,7 +251,6 @@ function mergeTwoSortedEventArrays(A1, A2) {
             A2i++;
         }
         resultIndex++;
-        // console.log('A1i: ' + A1i + ', A2i: ' + A2i);
     }
 
     while (A1i < A1.length) { // All elements from A2 used
