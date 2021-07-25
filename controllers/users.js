@@ -166,6 +166,7 @@ usersRouter.delete('/:uid/events/:eventId', (req, res) => {
         const uid = req.params.uid;
         const eventId = req.params.eventId;
         User.findOneAndUpdate({uid: uid}, {$pull: {events: eventId}}, (err, user) => {
+            console.log(user);
             Event.findOneAndDelete({_id: eventId}, (err, event) => {
                 return res.status(200).send('Event deleted');
             })
