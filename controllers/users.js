@@ -57,12 +57,20 @@ usersRouter.get('/:uid/projects', (req, res) => {
 /** 
  * Get events of user with the given uid
  */
-usersRouter.get('/:uid/events', (req, res) => {
+ usersRouter.get('/:uid/events', (req, res) => {
     const auth = req.currentUser;
     if (auth) {
         const uid = req.params.uid;
         User.findOne({uid: uid}, 'events')
-            .populate('events') // Check if this is working properly
+            .populate({
+                path: 'events',
+                model: 'Event', 
+                populate: {
+                    path: 'project',
+                    model: 'Project', 
+                    select: 'name -_id'
+                }
+            }) // Check if this is working properly
             .exec((err, user) => {
                 return res.status(200).json(user);
             })
