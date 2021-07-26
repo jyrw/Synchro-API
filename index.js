@@ -24,7 +24,7 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-const mongoDB = 'mongodb+srv://jyrw:^AtT&uT4aXYL3T@synchro.ap1ng.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+const mongoDB = 'mongodb+srv://jyrw:^AtT&uT4aXYL3T@synchro.ap1ng.mongodb.net/synchroDB?retryWrites=true&w=majority';
 
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
