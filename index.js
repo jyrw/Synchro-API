@@ -16,9 +16,12 @@ app.use(decodeIDToken);
 app.use('/api/users', usersRouter);
 app.use('/api/projects', projectsRouter);
 
-const PORT = 3001;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3001;
+}
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
 
 const mongoDB = 'mongodb+srv://jyrw:^AtT&uT4aXYL3T@synchro.ap1ng.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
