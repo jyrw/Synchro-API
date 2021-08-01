@@ -120,7 +120,7 @@ usersRouter.post('/:uid/events', (req, res) => {
             event.save();
             user.events.push(event);
             user.save();
-            return res.status(201).send('Event created');
+            return res.status(201).send(event);
         })
     } else {
         return res.status(401).send('Not authorized');
